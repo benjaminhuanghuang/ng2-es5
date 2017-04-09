@@ -19,17 +19,14 @@
       console.log('using QuoteService', this.id);
       var randomIndex = Math.floor(Math.random() * this.quotes.length);
       return this.quotes[randomIndex];
-    }
-  });
+    },
 
-  var MockQuoteService = Class({
-    constructor: function MockQuoteService() {},
-
-    getRandomQuote: function () {
-      return {
-        "line": "A mock quote",
-        "author": "Mock Author"
-      }
+    generateRandomQuotes: function (delay, callback) {
+      var self = this;  //trick
+      callback(this.getRandomQuote());
+      setInterval(function () {
+        callback(self.getRandomQuote());
+      }, delay);
     }
   });
 
@@ -41,10 +38,11 @@
       // Use dependency injection. require quoteService as a parameter of constructor
       // Angular inject container will inject a mock service 
       constructor: [QuoteService, function RandomQuoteComponent(quoteService) {
-        var quoteService = quoteService;
-        this.quote = quoteService.getRandomQuote();
+        var self = this;
+        quoteService.generateRandomQuotes(2000, function (quote) {
+          self.quote = quote;   // scope issue
+        });
       }]
-
     });
 
   var AppComponent = Component({
@@ -61,11 +59,11 @@
       imports: [BrowserModule],
       declarations: [AppComponent, RandomQuoteComponent],
       // Share one instance of QuoteService cross whole application.
-      providers: [ //QuoteService, 
-        {
-          provide: QuoteService, // Use mock service
-          useClass: MockQuoteService   // Or use instance : useValue new MockQuoteService()
-        }
+      providers: [QuoteService
+        // {
+        //   provide: QuoteService, // Use mock service
+        //   useClass: MockQuoteService // Or use instance : useValue new MockQuoteService()
+        // }
       ],
       bootstrap: [AppComponent]
     })
